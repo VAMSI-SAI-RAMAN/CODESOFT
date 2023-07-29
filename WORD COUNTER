@@ -1,0 +1,68 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
+public class WordCounter {
+    private static String getUserInput() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the text or provide a file path (type 'exit' to quit): ");
+        return scanner.nextLine().trim();
+    }
+    private static String readTextFromFile(String filePath) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            System.out.println("File not found. Please try again.");
+            return null;
+        }
+        return content.toString();
+    }
+    private static String[] preprocessText(String text) {
+        String cleanedText = text.replaceAll("[^a-zA-Z\\s]", "").toLowerCase();
+        return cleanedText.split("\\s+");
+    }
+
+    private static int countWords(String[] words, boolean ignoreCommonWords) {
+        if (ignoreCommonWords) {
+            Set<String> commonWords = new HashSet<>(Arrays.asList(
+                    "the", "and", "is", "in", "it", "a", "an", "of", "to", "for", "with", "on", "as", "by", "at"));
+            words = Arrays.stream(words)
+                    .filter(word -> !commonWords.contains(word))
+                    .toArray(String[]::new);
+        }
+        return words.length;
+    }
+    private static void displayStatistics(String[] words) {
+        Set<String> uniqueWords = new HashSet<>(Arrays.asList(words));
+        Map<String, Integer> wordFrequency = new HashMap<>();
+        for (String word : words) {
+            wordFrequency.put(word, wordFrequency.getOrDefault(word, 0) + 1);
+        }
+        System.out.println("Total words: " + words.length);
+        System.out.println("Total unique words: " + uniqueWords.size());
+        System.out.println("Word frequency:");
+        wordFrequency.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .forEach(entry -> System.out.println(entry.getKey() + ": " + entry.getValue()));
+    }
+    public static void main(String[] args) {
+        String userInput = getUserInput();
+        String text;
+        if (userInput.equals("exit")) {
+            return;
+        } else if (userInput.contains(".txt")) {
+            text = readTextFromFile(userInput);
+        } else {
+            text = userInput;
+        }
+        if (text != null) {
+            String[] words = preprocessText(text);
+            int wordCount = countWords(words, true);
+            displayStatistics(words);
+        }
+    }
+}
